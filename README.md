@@ -16,7 +16,7 @@ Tarantula Web Crawler is a simple and flexible web crawling library that allows 
 To install the Tarantula Web Crawler, use npm:
 
 ```bash
-npm install tarantula-web-crawler
+comming soon
 ```
 
 ## Usage
