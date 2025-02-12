@@ -1,5 +1,3 @@
-# tarantula-web-crawler/tarantula-web-crawler/README.md
-
 # Tarantula Web Crawler
 
 Tarantula Web Crawler is a simple and flexible web crawling library that allows users to customize their bot's user agent, select URLs to crawl, fully comply with robots.txt, and take screenshots of web pages.
