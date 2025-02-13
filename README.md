@@ -14,7 +14,7 @@ Tarantula Web Crawler is a simple and flexible web crawling library that allows 
 To install the Tarantula Web Crawler, use npm:
 
 ```bash
-comming soon
+npm i tarantula-web-crawler
 ```
 
 ## Usage
@@ -22,10 +22,10 @@ comming soon
 Here is a basic example of how to use the Tarantula Web Crawler:
 
 ```javascript
-const { Crawler, Task } = require('./src/index');
-const Capture = require('./src/utils/screenshot').default;
+const { Crawler, Task } = require('tarantula-web-crawler');
+const Capture = require('tarantula-web-crawler/src/utils/screenshot');
 
-const crawler = new Crawler('Tarantula/1.0');
+const crawler = new Crawler('Tarantula/1.0', { takeScreenshot: true });
 const capture = new Capture();
 
 const task = new Task('https://sakana11.org/');
