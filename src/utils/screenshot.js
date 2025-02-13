@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer';
+const puppeteer = require('puppeteer');
 
 class Capture {
   async capture(url) {
@@ -11,4 +11,4 @@ class Capture {
   }
 }
 
-export default Capture;
+module.exports = Capture;
