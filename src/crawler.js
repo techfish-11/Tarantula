@@ -1,22 +1,23 @@
 import axios from 'axios';
 import { parse } from 'node-html-parser';
-import { capture } from './utils/screenshot.js';
+import Capture from './utils/screenshot.js';
 import { DEFAULT_USER_AGENT } from './config/userAgent.js';
 import RobotsParserFactory from 'robots-txt-parser';
 
 class Crawler {
   constructor(userAgent = DEFAULT_USER_AGENT, options = {}) {
-    this.userAgent = `${userAgent} (Powered by Tarantula)`;
+    this.userAgent = `${userAgent}`;
     this.robotsAgent = 'Tarantula';
     this.robotsParser = RobotsParserFactory({
       userAgent: this.robotsAgent,
       allowOnNeutral: false
     });
-    this.takeScreenshot = options.takeScreenshot || false;
+    this.screenshotCapture = new Capture(this.userAgent);
     this.extractMetadata = options.extractMetadata || false;
     this.followLinks = options.followLinks || false;
     this.maxDepth = options.maxDepth || 1;
     this.concurrentLimit = options.concurrentLimit || 5;
+    this.takeScreenshots = options.takeScreenshots || false;  // オプション名を修正
     this.activeRequests = 0;
     this.queue = [];
   }
@@ -45,13 +46,12 @@ class Crawler {
           this.extractPageMetadata(root);
         }
 
-        if (this.takeScreenshot) {
+        if (this.takeScreenshots) {  // 修正したオプション名を使用
           await this.takeScreenshot(url);
         }
 
         if (this.followLinks) {
           const links = root.querySelectorAll('a');
-          const crawlPromises = [];
           for (const link of links) {
             const href = link.getAttribute('href');
             if (href && href.startsWith('http')) {
@@ -85,7 +85,7 @@ class Crawler {
 
   async takeScreenshot(url) {
     try {
-      await capture(url);
+      await this.screenshotCapture.capture(url);
       console.log(`Screenshot taken for ${url}`);
     } catch (error) {
       console.error(`Error taking screenshot for ${url}:`, error.message);

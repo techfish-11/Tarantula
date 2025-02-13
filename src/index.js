@@ -1,8 +1,8 @@
-const Crawler = require('./crawler');
-const Task = require('./task');
-const Capture = require('./utils/screenshot');
+import Crawler from './crawler.js';
+import Task from './task.js';
+import Capture from './utils/screenshot.js';
 
-module.exports = {
+export {
   Crawler,
   Task,
   Capture,

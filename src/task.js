@@ -1,13 +1,9 @@
-class Task {
+export default class Task {
   constructor(url) {
     this.url = url;
   }
 
-  execute() {
-    const Crawler = require('./crawler');
-    const crawler = new Crawler();
+  async execute(crawler) {
     return crawler.crawl(this.url);
   }
 }
-
-module.exports = Task;
