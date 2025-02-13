@@ -1,14 +1,14 @@
-const puppeteer = require('puppeteer');
+import puppeteer from 'puppeteer';
 
-async function capture(url) {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-  await page.goto(url);
-  const screenshot = await page.screenshot();
-  await browser.close();
-  return screenshot;
+class Capture {
+  async capture(url) {
+    const browser = await puppeteer.launch({ headless: true });
+    const page = await browser.newPage();
+    await page.goto(url, { waitUntil: 'networkidle2' });
+    const screenshot = await page.screenshot();
+    await browser.close();
+    return screenshot;
+  }
 }
 
-module.exports = {
-  capture
-};
+export default Capture;

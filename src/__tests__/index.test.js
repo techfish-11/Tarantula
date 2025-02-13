@@ -1,6 +1,11 @@
 const { Crawler, Task } = require('../index');
 
-test('should export Crawler and Task modules', () => {
-  expect(Crawler).toBeDefined();
-  expect(Task).toBeDefined();
+describe('Module Exports', () => {
+  test('should export Crawler module', () => {
+    expect(Crawler).toBeDefined();
+  });
+
+  test('should export Task module', () => {
+    expect(Task).toBeDefined();
+  });
 });
