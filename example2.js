@@ -1,6 +1,21 @@
 import { Crawler, Task } from './src/index.js';
+import { RobotsConfig } from './src/config/robotsConfig.js';
 
-const crawler = new Crawler('Tarantula/1.0', { takeScreenshots: true });
+const robotsConfig = new RobotsConfig({
+  userAgent: 'Tarantula',
+  strictCheck: true,
+  onlyAllowIfAllowed: true,
+  maxRetries: 5,
+  retryDelay: 2000,
+  allowOnNeutral: false,
+  logLevel: 'debug'
+});
+
+const crawler = new Crawler('Tarantula/1.0', { 
+  takeScreenshots: true,
+  robotsConfig: robotsConfig
+});
+
 const task = new Task('https://sakana11.org/');
 
 (async () => {

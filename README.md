@@ -1,142 +1,343 @@
-# Tarantula Web Crawler
+# Tarantula
 
-Tarantula Web Crawler is a simple and flexible web crawling library that allows users to customize their bot's user agent, select URLs to crawl, fully comply with robots.txt, and take screenshots of web pages.
+A strict robots.txt compliant web crawler written in JavaScript.
 
 ## Features
 
-- Customizable user agent
-- Selectable URLs for crawling
-- Full compliance with robots.txt
-- Screenshot functionality for web pages
+- Full robots.txt compliance with strict enforcement
+- Customizable robots.txt handling policies
+- Configurable crawl delays
+- Screenshot capability with automatic file saving
+- Concurrent request management with queue system
+- Metadata extraction from meta tags
+- Link following with depth control
+- Detailed response information including status codes
+- Robust error handling and retry mechanisms
+- Built-in rate limiting
 
 ## Installation
 
-To install the Tarantula Web Crawler, use npm:
-
 ```bash
-npm i tarantula-web-crawler
+npm install tarantula-crawler
 ```
 
-## Usage
-
-Here is a basic example of how to use the Tarantula Web Crawler:
+## Basic Usage
 
 ```javascript
-import { Crawler, Task, Capture } from 'tarantula-web-crawler';
-import { writeFileSync } from 'fs';
+import { Crawler, Task } from 'tarantula-crawler';
 
-const crawler = new Crawler('Tarantula/1.0', { takeScreenshot: true });
-const capture = new Capture();
+// Basic crawling
+const crawler = new Crawler('Tarantula/1.0');
+const task = new Task('https://example.com');
+const result = await task.execute(crawler);
+console.log(result);
+// Result includes: success, statusCode, url, error, screenshotPath
 
-const task = new Task('https://sakana11.org/');
-
-task.execute(crawler)
-  .then(async () => {
-    console.log('Crawling completed!');
-    const screenshot = await capture.capture('https://sakana11.org/');
-    writeFileSync('screenshot.png', screenshot);
-    console.log('Screenshot captured and saved as screenshot.png');
-  })
-  .catch((error) => {
-    console.error('Error during crawling:', error);
-  });
+// Crawling with screenshots
+const crawlerWithScreenshots = new Crawler('Tarantula/1.0', { 
+  takeScreenshots: true 
+});
+const screenshotTask = new Task('https://example.com');
+const screenshotResult = await screenshotTask.execute(crawlerWithScreenshots);
+// Screenshot will be saved as screenshot-example.com.png
 ```
 
-## API
+## Advanced Configuration
 
-### Crawler
+### Robots.txt Configuration
 
-#### constructor(userAgent, options)
+The crawler provides extensive configuration options for robots.txt handling through the `RobotsConfig` class:
 
-Creates a new Crawler instance with the specified user agent and options.
+```javascript
+import { Crawler, RobotsConfig } from 'tarantula-crawler';
 
-Options:
-- `extractMetadata`: Extract metadata from pages (default: false)
-- `followLinks`: Follow and crawl links on pages (default: false)
-- `maxDepth`: Maximum depth for link following (default: 1)
-- `concurrentLimit`: Maximum concurrent requests (default: 5)
-- `takeScreenshots`: Enable screenshot capture (default: false)
+const robotsConfig = new RobotsConfig({
+  userAgent: 'Tarantula',              // User-agent for robots.txt rules
+  strictCheck: true,                   // Enable strict rule checking
+  onlyAllowIfAllowed: true,           // Require explicit Allow rules
+  maxRetries: 3,                       // Maximum retries for fetching robots.txt
+  retryDelay: 1000,                    // Delay between retries (ms)
+  allowOnNeutral: false,               // Behavior when robots.txt is unavailable
+  logLevel: 'debug',                   // Logging verbosity
+  maxCacheTime: 3600000,               // Cache duration (ms)
+  ignoreInvalidRules: false            // Invalid rules handling
+});
 
-#### crawl(url)
+const crawler = new Crawler('Tarantula/1.0', { 
+  robotsConfig,
+  takeScreenshots: true
+});
+```
 
-Crawls the specified URL and returns a response object:
+### Robots.txt Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| userAgent | string | 'Tarantula' | User-agent string for robots.txt rules |
+| strictCheck | boolean | true | Enable strict rule checking |
+| onlyAllowIfAllowed | boolean | true | Require explicit Allow rules |
+| maxRetries | number | 3 | Maximum retries for fetching robots.txt |
+| retryDelay | number | 1000 | Delay between retries in milliseconds |
+| allowOnNeutral | boolean | false | Allow crawling when robots.txt is unavailable |
+| logLevel | string | 'debug' | Logging verbosity level |
+| maxCacheTime | number | 3600000 | robots.txt cache duration in milliseconds |
+| ignoreInvalidRules | boolean | false | Whether to ignore invalid robots.txt rules |
+
+### Crawler Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| extractMetadata | boolean | false | Extract meta tags from pages |
+| followLinks | boolean | false | Follow links on crawled pages |
+| maxDepth | number | 1 | Maximum depth for link following |
+| concurrentLimit | number | 5 | Maximum concurrent requests |
+| takeScreenshots | boolean | false | Take screenshots of pages |
+
+### Response Format
+
+The crawler returns detailed information about each crawl:
+
 ```javascript
 {
-  success: boolean,      // true if status code is 2xx
-  statusCode: number,    // HTTP status code
-  url: string,          // crawled URL
-  error: string | null, // error message if failed
-  content: string       // page content if successful
+  success: boolean,       // Whether the crawl was successful
+  statusCode: number,     // HTTP status code (if available)
+  url: string,           // Crawled URL
+  error: string | null,  // Error message if failed
+  screenshotPath: string // Path to saved screenshot (if enabled)
 }
 ```
 
-#### obeyRobotsTxt(url)
+## Robots.txt Processing
 
-Parses the robots.txt file and checks if crawling is allowed for the specified URL.
+### How It Works
 
-#### takeScreenshot(url)
+The crawler strictly follows these steps when processing robots.txt:
 
-Takes a screenshot of the specified URL.
+1. Fetches robots.txt from the target domain
+2. Parses the rules specific to the "Tarantula" user-agent
+3. Checks for complete site blocks (`Disallow: /`)
+4. Validates path-specific rules
+5. Enforces any specified crawl delays
 
-### Task
+### Example robots.txt Rules
 
-#### constructor(url)
+```
+# Complete block for Tarantula
+User-agent: Tarantula
+Disallow: /
 
-Creates a new Task instance with the specified URL.
+# Selective permissions
+User-agent: Tarantula
+Allow: /public/
+Disallow: /private/
+Crawl-delay: 5
 
-#### execute(crawler)
+# Wildcard rules
+User-agent: *
+Disallow: /*.pdf$
+```
 
-Executes the crawling task using the provided Crawler instance. Returns a response object:
+### Error Handling
+
+The crawler handles various robots.txt scenarios:
+
+- Missing robots.txt: Defaults to disallowing crawling (configurable via `allowOnNeutral`)
+- Network errors: Retries with exponential backoff
+- Invalid rules: Strict parsing with configurable tolerance
+- Timeout issues: Configurable retry attempts
+
+### Validation Examples
+
+```javascript
+// Strict validation requiring explicit allows
+const strictConfig = new RobotsConfig({
+  strictCheck: true,
+  onlyAllowIfAllowed: true,
+  allowOnNeutral: false
+});
+
+// More permissive configuration
+const permissiveConfig = new RobotsConfig({
+  strictCheck: false,
+  onlyAllowIfAllowed: false,
+  allowOnNeutral: true
+});
+
+// With custom retry logic
+const resilientConfig = new RobotsConfig({
+  maxRetries: 5,
+  retryDelay: 2000,
+  maxCacheTime: 7200000 // 2 hours
+});
+```
+
+## Metadata Extraction
+
+When enabled, the crawler can automatically extract meta tags from pages:
+
+```javascript
+const crawler = new Crawler('Tarantula/1.0', {
+  extractMetadata: true
+});
+// Meta tags will be automatically extracted and logged
+```
+
+## Link Following
+
+The crawler can automatically follow links found on pages:
+
+```javascript
+const crawler = new Crawler('Tarantula/1.0', {
+  followLinks: true,
+  maxDepth: 2  // Follow links up to 2 levels deep
+});
+```
+
+## Concurrent Request Management
+
+The crawler automatically manages concurrent requests:
+
+```javascript
+const crawler = new Crawler('Tarantula/1.0', {
+  concurrentLimit: 3  // Maximum 3 concurrent requests
+});
+// Requests exceeding the limit are automatically queued
+```
+
+## Screenshot Capture
+
+The crawler can automatically capture and save screenshots:
+
+```javascript
+const crawler = new Crawler('Tarantula/1.0', {
+  takeScreenshots: true
+});
+// Screenshots are saved as screenshot-[hostname].png
+```
+
+## Error Handling
+
+The crawler provides robust error handling:
+
+- Network errors: Automatically retried with configurable attempts
+- Invalid robots.txt: Configurable strict or lenient handling
+- Rate limiting: Automatic queue management
+- Screenshot failures: Non-fatal, crawl continues
+- Invalid URLs: Proper error reporting
+
+### Error Response Example
+
 ```javascript
 {
-  success: boolean,         // true if status code is 2xx
-  statusCode: number,       // HTTP status code
-  url: string,             // crawled URL
-  error: string | null,    // error message if failed
-  screenshotPath: string | null  // path to screenshot if captured
+  success: false,
+  statusCode: null,
+  url: "https://example.com",
+  error: "HTTP status 404",
+  screenshotPath: null
 }
 ```
 
-#### crawl(crawler)
+## Debugging
 
-Internal method that handles the crawling operation.
+### Logging Levels
 
-#### captureScreenshot(crawler, response)
+The crawler provides detailed logging for robots.txt processing:
 
-Internal method that handles the screenshot capture operation.
+- debug: Full robots.txt content and parsing details
+- info: Rule matching and decisions
+- warn: Retry attempts and potential issues
+- error: Access violations and critical failures
 
-## Example
-
-Here's an example showing how to use the updated API:
+Enable debug logging:
 
 ```javascript
-import { Crawler, Task } from 'tarantula-web-crawler';
-
-const crawler = new Crawler('Tarantula/1.0', { takeScreenshots: true });
-const task = new Task('https://sakana11.org/');
-
-(async () => {
-  try {
-    const result = await task.execute(crawler);
-    
-    if (result.success) {
-      console.log('Crawling completed successfully!');
-      console.log(`Status code: ${result.statusCode}`);
-      if (result.screenshotPath) {
-        console.log(`Screenshot saved to: ${result.screenshotPath}`);
-      }
-    } else {
-      console.log('Crawling failed:', result.error);
-      if (result.statusCode) {
-        console.log(`Status code: ${result.statusCode}`);
-      }
-    }
-  } catch (error) {
-    console.error('Error during execution:', error);
-  }
-})();
+const robotsConfig = new RobotsConfig({
+  logLevel: 'debug'
+});
 ```
+
+## Examples
+
+### Basic Crawling with Screenshots
+
+```javascript
+const crawler = new Crawler('Tarantula/1.0', { 
+  takeScreenshots: true 
+});
+const task = new Task('https://example.com');
+const result = await task.execute(crawler);
+```
+
+### Strict Robots.txt Compliance
+
+```javascript
+const robotsConfig = new RobotsConfig({
+  userAgent: 'Tarantula',
+  strictCheck: true,
+  onlyAllowIfAllowed: true
+});
+
+const crawler = new Crawler('Tarantula/1.0', { 
+  robotsConfig,
+  maxDepth: 2,
+  followLinks: true
+});
+```
+
+## Examples Directory
+
+The `examples` directory contains practical usage scenarios:
+
+### basic-crawl.js
+A complete example demonstrating:
+- Strict robots.txt compliance
+- Error handling
+- Rate limiting
+- Metadata extraction
+- Screenshot capture
+
+Run the example:
+```bash
+node examples/basic-crawl.js
+```
+
+## Best Practices
+
+### Robots.txt Compliance
+
+- Always use the `Tarantula` user-agent for consistency
+- Set appropriate delays between requests
+- Respect `Crawl-delay` directives
+- Use strict mode for complete compliance
+- Implement proper error handling for missing robots.txt files
+
+### Rate Limiting
+
+- Set reasonable `concurrentLimit` values
+- Add delays between site transitions
+- Respect server response headers
+- Monitor response times and adjust accordingly
+
+### Performance Optimization
+
+- Set appropriate `concurrentLimit` based on target server capacity
+- Use `maxDepth` to control crawl scope
+- Enable `extractMetadata` only when needed
+- Configure appropriate `maxCacheTime` for robots.txt
+
+### Memory Management
+
+- Process crawled data in streams when possible
+- Limit concurrent requests appropriately
+- Clear screenshot data after processing
+
+### Respectful Crawling
+
+- Always set a descriptive User-Agent
+- Respect robots.txt rules strictly
+- Implement appropriate delays between requests
+- Monitor and respect server response headers
 
 ## License
 
-This project is licensed under the MIT License. See the LICENSE file for more details.
+MIT License - see LICENSE file for details
