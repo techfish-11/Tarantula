@@ -46,13 +46,29 @@ task.execute(crawler)
 
 ### Crawler
 
-#### constructor(userAgent)
+#### constructor(userAgent, options)
 
-Creates a new Crawler instance with the specified user agent.
+Creates a new Crawler instance with the specified user agent and options.
+
+Options:
+- `extractMetadata`: Extract metadata from pages (default: false)
+- `followLinks`: Follow and crawl links on pages (default: false)
+- `maxDepth`: Maximum depth for link following (default: 1)
+- `concurrentLimit`: Maximum concurrent requests (default: 5)
+- `takeScreenshots`: Enable screenshot capture (default: false)
 
 #### crawl(url)
 
-Crawls the specified URL.
+Crawls the specified URL and returns a response object:
+```javascript
+{
+  success: boolean,      // true if status code is 2xx
+  statusCode: number,    // HTTP status code
+  url: string,          // crawled URL
+  error: string | null, // error message if failed
+  content: string       // page content if successful
+}
+```
 
 #### obeyRobotsTxt(url)
 
@@ -68,9 +84,58 @@ Takes a screenshot of the specified URL.
 
 Creates a new Task instance with the specified URL.
 
-#### execute()
+#### execute(crawler)
 
-Executes the crawling task using the provided Crawler instance.
+Executes the crawling task using the provided Crawler instance. Returns a response object:
+```javascript
+{
+  success: boolean,         // true if status code is 2xx
+  statusCode: number,       // HTTP status code
+  url: string,             // crawled URL
+  error: string | null,    // error message if failed
+  screenshotPath: string | null  // path to screenshot if captured
+}
+```
+
+#### crawl(crawler)
+
+Internal method that handles the crawling operation.
+
+#### captureScreenshot(crawler, response)
+
+Internal method that handles the screenshot capture operation.
+
+## Example
+
+Here's an example showing how to use the updated API:
+
+```javascript
+import { Crawler, Task } from 'tarantula-web-crawler';
+
+const crawler = new Crawler('Tarantula/1.0', { takeScreenshots: true });
+const task = new Task('https://sakana11.org/');
+
+(async () => {
+  try {
+    const result = await task.execute(crawler);
+    
+    if (result.success) {
+      console.log('Crawling completed successfully!');
+      console.log(`Status code: ${result.statusCode}`);
+      if (result.screenshotPath) {
+        console.log(`Screenshot saved to: ${result.screenshotPath}`);
+      }
+    } else {
+      console.log('Crawling failed:', result.error);
+      if (result.statusCode) {
+        console.log(`Status code: ${result.statusCode}`);
+      }
+    }
+  } catch (error) {
+    console.error('Error during execution:', error);
+  }
+})();
+```
 
 ## License
 

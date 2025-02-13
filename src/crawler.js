@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { parse } from 'node-html-parser';
-import Capture from './utils/screenshot.js';
+import Screenshot from './utils/screenshot.js';
 import { DEFAULT_USER_AGENT } from './config/userAgent.js';
 import RobotsParserFactory from 'robots-txt-parser';
 
@@ -12,18 +12,24 @@ class Crawler {
       userAgent: this.robotsAgent,
       allowOnNeutral: false
     });
-    this.screenshotCapture = new Capture(this.userAgent);
     this.extractMetadata = options.extractMetadata || false;
     this.followLinks = options.followLinks || false;
     this.maxDepth = options.maxDepth || 1;
     this.concurrentLimit = options.concurrentLimit || 5;
-    this.takeScreenshots = options.takeScreenshots || false;  // オプション名を修正
+    this.takeScreenshots = options.takeScreenshots || false;
     this.activeRequests = 0;
     this.queue = [];
   }
 
   async crawl(url, depth = 0) {
-    if (depth > this.maxDepth) return;
+    if (depth > this.maxDepth) {
+      return {
+        url,
+        success: false,
+        statusCode: null,
+        error: 'Max depth exceeded'
+      };
+    }
 
     if (this.activeRequests >= this.concurrentLimit) {
       this.queue.push(() => this.crawl(url, depth));
@@ -40,18 +46,15 @@ class Crawler {
           },
         });
         const root = parse(response.data);
-        console.log(`Crawled ${url}:`, root.querySelector('title').text);
+        console.log(`Crawled ${url}:`, root.querySelector('title')?.text);
 
         if (this.extractMetadata) {
           this.extractPageMetadata(root);
         }
 
-        if (this.takeScreenshots) {  // 修正したオプション名を使用
-          await this.takeScreenshot(url);
-        }
-
         if (this.followLinks) {
           const links = root.querySelectorAll('a');
+          const crawlPromises = [];
           for (const link of links) {
             const href = link.getAttribute('href');
             if (href && href.startsWith('http')) {
@@ -60,11 +63,33 @@ class Crawler {
           }
           await Promise.all(crawlPromises);
         }
+
+        return {
+          url,
+          success: true,
+          statusCode: response.status,
+          content: response.data,
+          error: null
+        };
       } else {
-        console.log(`Crawling disallowed for ${url} by robots.txt`);
+        return {
+          url,
+          success: false,
+          statusCode: null,
+          error: 'Blocked by robots.txt'
+        };
       }
     } catch (error) {
-      console.error(`Error during crawling ${url}:`, error.message);
+      let statusCode = null;
+      if (error.response) {
+        statusCode = error.response.status;
+      }
+      return {
+        url,
+        success: false,
+        statusCode,
+        error: error.message
+      };
     } finally {
       this.activeRequests--;
       if (this.queue.length > 0) {
@@ -85,8 +110,9 @@ class Crawler {
 
   async takeScreenshot(url) {
     try {
-      await this.screenshotCapture.capture(url);
+      const screenshot = await Screenshot.capture(url, this.userAgent);
       console.log(`Screenshot taken for ${url}`);
+      return screenshot;
     } catch (error) {
       console.error(`Error taking screenshot for ${url}:`, error.message);
     }

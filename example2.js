@@ -1,18 +1,25 @@
-import { Crawler, Task, Capture } from './src/index.js';
-import { writeFileSync } from 'fs';
+import { Crawler, Task } from './src/index.js';
 
-const crawler = new Crawler('Tarantula/1.0', { takeScreenshot: true });
-const capture = new Capture();
-
+const crawler = new Crawler('Tarantula/1.0', { takeScreenshots: true });
 const task = new Task('https://sakana11.org/');
 
-task.execute(crawler)
-    .then(async () => {
-        console.log('Crawling completed!');
-        const screenshot = await capture.capture('https://sakana11.org/');
-        writeFileSync('screenshot.png', screenshot);
-        console.log('Screenshot captured and saved as screenshot.png');
-    })
-    .catch((error) => {
-        console.error('Error during crawling:', error);
-    });
+(async () => {
+  try {
+    const result = await task.execute(crawler);
+    
+    if (result.success) {
+      console.log('Crawling completed successfully!');
+      console.log(`Status code: ${result.statusCode}`);
+      if (result.screenshotPath) {
+        console.log(`Screenshot saved to: ${result.screenshotPath}`);
+      }
+    } else {
+      console.log('Crawling failed:', result.error);
+      if (result.statusCode) {
+        console.log(`Status code: ${result.statusCode}`);
+      }
+    }
+  } catch (error) {
+    console.error('Error during execution:', error);
+  }
+})();
