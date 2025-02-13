@@ -1,8 +1,8 @@
-const axios = require('axios');
-const { parse } = require('node-html-parser');
-const { capture } = require('./utils/screenshot');
-const { DEFAULT_USER_AGENT } = require('./config/userAgent');
-const RobotsParserFactory = require('robots-txt-parser');
+import axios from 'axios';
+import { parse } from 'node-html-parser';
+import { capture } from './utils/screenshot.js';
+import { DEFAULT_USER_AGENT } from './config/userAgent.js';
+import RobotsParserFactory from 'robots-txt-parser';
 
 class Crawler {
   constructor(userAgent = DEFAULT_USER_AGENT, options = {}) {
@@ -106,4 +106,4 @@ class Crawler {
   }
 }
 
-module.exports = Crawler;
+export default Crawler;

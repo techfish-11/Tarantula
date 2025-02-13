@@ -22,8 +22,8 @@ npm i tarantula-web-crawler
 Here is a basic example of how to use the Tarantula Web Crawler:
 
 ```javascript
-const { Crawler, Task } = require('tarantula-web-crawler');
-const Capture = require('tarantula-web-crawler/src/utils/screenshot');
+import { Crawler, Task } from 'tarantula-web-crawler';
+import Capture from 'tarantula-web-crawler/src/utils/screenshot';
 
 const crawler = new Crawler('Tarantula/1.0', { takeScreenshot: true });
 const capture = new Capture();
