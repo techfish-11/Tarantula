@@ -1,4 +1,4 @@
-const { Crawler, Task } = require('../index');
+import { Crawler, Task } from '../index';
 
 describe('Module Exports', () => {
   test('should export Crawler module', () => {
