@@ -19,7 +19,7 @@
   "author": "techfish-11",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.21.1",
+    "axios": "^1.8.2",
     "jest": "^27.0.0",
     "node-html-parser": "^7.0.1",
     "puppeteer": "^10.0.0",
